@@ -1,186 +1,1029 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUCIDITY - AI Content Analysis System</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --primary: #00ff9d;
-            --secondary: #0066ff;
-            --accent: #ff00ff;
-            --dark: #0a0e1a;
-            --darker: #050810;
-            --light: #e8f4f8;
-            --warning: #ffaa00;
-            --danger: #ff3366;
-            --success: #00ff9d;
-            --glow-primary: 0 0 20px rgba(0, 255, 157, 0.3);
-        }
-        
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'IBM Plex Mono', monospace; background: var(--darker); color: var(--light); min-height: 100vh; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
-        
-        header { text-align: center; margin-bottom: 4rem; padding: 3rem 0; }
-        h1 { font-family: 'Orbitron', sans-serif; font-size: 4rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.1em; }
-        
-        .upload-section { background: rgba(10, 14, 26, 0.9); border: 2px solid rgba(0, 255, 157, 0.2); border-radius: 20px; padding: 3rem; margin-bottom: 3rem; box-shadow: var(--glow-primary); }
-        textarea { width: 100%; min-height: 200px; background: #050810; border: 2px solid #0044cc; border-radius: 10px; padding: 1.5rem; color: white; margin-top: 1rem; }
-        
-        .btn-group { display: flex; gap: 1rem; margin-top: 1.5rem; }
-        .btn { font-family: 'Orbitron', sans-serif; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
-        .btn-primary { background: var(--primary); color: var(--dark); }
-        
-        /* BEAT MAP SPECIFIC CSS */
-        .beat-map-container { background: #0a0e1a; padding: 25px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; }
-        .beat-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 6px; height: 40px; margin: 20px 0; }
-        .beat-block { border-radius: 3px; transition: all 0.3s ease; position: relative; }
-        .beat-block:hover::after { content: attr(title); position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); background: black; padding: 5px; font-size: 10px; white-space: nowrap; z-index: 100; border: 1px solid var(--primary); }
-        
-        .results-section { display: none; }
-        .results-section.active { display: block; }
-        .tabs { display: flex; gap: 10px; border-bottom: 2px solid #222; margin-bottom: 20px; }
-        .tab { padding: 15px; background: transparent; color: #666; border: none; cursor: pointer; font-family: 'Orbitron'; font-size: 0.8rem; }
-        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LUCIDITY Web Analyzer — ACTS / Beat Map</title>
 
-        .score-card { background: #0f172a; padding: 30px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #1e293b; }
-        .score-value { font-family: 'Orbitron'; font-size: 3.5rem; color: var(--primary); }
+  <!-- Fonts (safe CDN) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600;700&display=swap" rel="stylesheet">
 
-        footer { text-align: center; margin-top: 50px; opacity: 0.6; font-size: 0.8rem; padding-bottom: 40px; }
-    </style>
+  <style>
+    :root{
+      --bg:#050810;
+      --panel:#0b1222;
+      --panel2:#061020;
+      --light:#e8fff6;
+      --muted:rgba(232,255,246,0.70);
+      --primary:#00ff9d;
+      --secondary:#00a3ff;
+      --warn:#ffb300;
+      --danger:#ff3b3b;
+      --shadow:0 0 28px rgba(0,255,157,0.12);
+      --radius:14px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      background: radial-gradient(1200px 900px at 65% 20%, rgba(0,255,157,0.10), transparent 55%),
+                  radial-gradient(1000px 700px at 20% 85%, rgba(0,163,255,0.10), transparent 55%),
+                  var(--bg);
+      color:var(--light);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow-x:hidden;
+    }
+
+    .wrap{
+      max-width:1200px;
+      margin:0 auto;
+      padding:22px 16px 60px;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
+      margin-bottom:18px;
+    }
+
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .brand h1{
+      margin:0;
+      font-family:'Orbitron', sans-serif;
+      letter-spacing:1.2px;
+      font-weight:700;
+      font-size:28px;
+    }
+    .brand .sub{
+      color:var(--muted);
+      font-family:'IBM Plex Mono', monospace;
+      font-size:13px;
+      line-height:1.4;
+      max-width:720px;
+    }
+
+    .pillrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:8px;
+    }
+    .pill{
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+      padding:6px 10px;
+      border:1px solid rgba(0,255,157,0.25);
+      border-radius:999px;
+      background:rgba(0,255,157,0.06);
+      box-shadow:0 0 18px rgba(0,255,157,0.06);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap:16px;
+    }
+    @media (max-width: 980px){
+      .grid{ grid-template-columns: 1fr; }
+    }
+
+    .card{
+      background: linear-gradient(180deg, rgba(11,18,34,0.92), rgba(6,16,32,0.92));
+      border:1px solid rgba(0,255,157,0.18);
+      border-radius:var(--radius);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+    }
+
+    .cardhead{
+      padding:14px 16px;
+      border-bottom:1px solid rgba(0,255,157,0.12);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      background: rgba(0,0,0,0.18);
+    }
+
+    .cardhead .title{
+      font-family:'Orbitron', sans-serif;
+      font-size:13px;
+      letter-spacing:1px;
+      color:rgba(232,255,246,0.92);
+    }
+
+    .cardbody{ padding:16px; }
+
+    textarea{
+      width:100%;
+      min-height:220px;
+      resize:vertical;
+      padding:14px;
+      border-radius:12px;
+      background: rgba(5,8,16,0.75);
+      color:var(--light);
+      border:1px solid rgba(0,255,157,0.20);
+      outline:none;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:13px;
+      line-height:1.55;
+      box-shadow: inset 0 0 24px rgba(0,255,157,0.06);
+    }
+    textarea:focus{
+      border-color: rgba(0,255,157,0.40);
+      box-shadow: inset 0 0 30px rgba(0,255,157,0.10);
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:12px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .btn{
+      cursor:pointer;
+      border:none;
+      padding:10px 14px;
+      border-radius:12px;
+      font-family:'IBM Plex Mono', monospace;
+      font-weight:700;
+      letter-spacing:0.3px;
+      background: linear-gradient(180deg, rgba(0,255,157,0.22), rgba(0,255,157,0.12));
+      border:1px solid rgba(0,255,157,0.30);
+      color:var(--light);
+      box-shadow:0 0 18px rgba(0,255,157,0.14);
+    }
+    .btn:hover{ filter:brightness(1.08); }
+    .btn:active{ transform: translateY(1px); }
+
+    .btn.secondary{
+      background: linear-gradient(180deg, rgba(0,163,255,0.20), rgba(0,163,255,0.10));
+      border:1px solid rgba(0,163,255,0.28);
+      box-shadow:0 0 18px rgba(0,163,255,0.12);
+    }
+
+    .meta{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      color:rgba(232,255,246,0.75);
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+    }
+    .meta span{
+      padding:6px 10px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.18);
+    }
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:10px;
+      padding:10px 12px;
+      border-bottom:1px solid rgba(0,255,157,0.10);
+      background: rgba(0,0,0,0.16);
+      overflow:auto;
+    }
+    .tab{
+      white-space:nowrap;
+      cursor:pointer;
+      font-family:'Orbitron', sans-serif;
+      font-size:12px;
+      letter-spacing:0.9px;
+      padding:8px 12px;
+      border-radius:999px;
+      border:1px solid rgba(0,255,157,0.14);
+      background:rgba(0,255,157,0.05);
+      color:rgba(232,255,246,0.82);
+    }
+    .tab.active{
+      border-color:rgba(0,255,157,0.36);
+      box-shadow:0 0 18px rgba(0,255,157,0.14);
+      color:var(--light);
+    }
+
+    .panel{ display:none; }
+    .panel.active{ display:block; }
+
+    /* Score card */
+    .score-card{
+      border:2px solid var(--primary);
+      box-shadow:0 0 30px rgba(0,255,157,0.20);
+      border-radius:16px;
+      padding:14px;
+      background: rgba(5,8,16,0.62);
+    }
+
+    .scorebig{
+      font-family:'Orbitron', sans-serif;
+      font-size:34px;
+      letter-spacing:1px;
+      color:var(--primary);
+      margin:0 0 6px;
+    }
+    .status{
+      font-family:'IBM Plex Mono', monospace;
+      font-weight:700;
+      letter-spacing:0.8px;
+      padding:6px 10px;
+      border-radius:999px;
+      display:inline-block;
+      border:1px solid rgba(255,255,255,0.10);
+      background:rgba(0,0,0,0.18);
+    }
+    .status.healthy{ color:var(--primary); border-color:rgba(0,255,157,0.25); }
+    .status.degraded{ color:var(--warn); border-color:rgba(255,179,0,0.25); }
+    .status.critical{ color:var(--danger); border-color:rgba(255,59,59,0.25); }
+
+    .kv{
+      margin-top:12px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:10px;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+      color:rgba(232,255,246,0.80);
+    }
+    .kv div{
+      padding:10px 10px;
+      border-radius:12px;
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.16);
+    }
+    .kv b{ color:rgba(232,255,246,0.92); }
+
+    /* Degradation bars */
+    .bars{ display:flex; flex-direction:column; gap:12px; }
+    .barrow{ display:flex; align-items:center; gap:12px; }
+    .barlabel{
+      width:180px;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+      letter-spacing:0.3px;
+      color:rgba(232,255,246,0.84);
+    }
+    .bar{
+      flex:1;
+      height:10px;
+      background:#1a2236;
+      border-radius:999px;
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,0.05);
+    }
+    .fill{
+      height:100%;
+      width:0%;
+      background: var(--primary);
+      box-shadow: 0 0 14px rgba(0,255,157,0.55);
+      transition: width 900ms ease-out;
+    }
+    .barpct{
+      width:70px;
+      text-align:right;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+      color:rgba(232,255,246,0.82);
+    }
+
+    .note{
+      margin-top:14px;
+      padding:12px 12px;
+      border-radius:14px;
+      border-left:3px solid var(--secondary);
+      background:rgba(0,163,255,0.07);
+      border:1px solid rgba(0,163,255,0.18);
+      font-family:'IBM Plex Mono', monospace;
+      font-size:12px;
+      line-height:1.5;
+      color:rgba(232,255,246,0.82);
+    }
+
+    /* --- ACTS Vector Grid (Ultimate) --- */
+    .vector-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(210px,1fr));
+      gap:14px;
+      padding:14px;
+    }
+    .vector-node{
+      background:rgba(5,8,16,0.78);
+      border:1px solid rgba(0,255,157,0.18);
+      border-radius:10px;
+      padding:14px 14px 12px 14px;
+      position:relative;
+      overflow:hidden;
+      box-shadow:0 0 22px rgba(0,255,157,0.06);
+    }
+    .vector-node::before{
+      content:'';
+      position:absolute;
+      left:0; top:0;
+      height:100%; width:3px;
+      background:var(--primary);
+      opacity:0.9;
+    }
+    .vector-label{
+      font-family:'Orbitron', sans-serif;
+      font-size:0.70rem;
+      color:var(--primary);
+      letter-spacing:1.2px;
+      margin-bottom:6px;
+      opacity:0.95;
+    }
+    .vector-value{
+      font-family:'IBM Plex Mono', monospace;
+      font-size:1.15rem;
+      font-weight:700;
+      color:var(--light);
+    }
+    .vector-sub{
+      margin-top:6px;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:0.72rem;
+      color:rgba(200,255,235,0.75);
+    }
+    .vector-bar-mini{
+      width:100%;
+      height:5px;
+      background:#1a2236;
+      margin-top:10px;
+      border-radius:3px;
+      overflow:hidden;
+    }
+    .vector-fill-mini{
+      height:100%;
+      background:var(--primary);
+      box-shadow:0 0 14px rgba(0,255,157,0.55);
+      transition:width 900ms ease-out;
+    }
+
+    footer{
+      margin-top:18px;
+      font-family:'IBM Plex Mono', monospace;
+      font-size:11px;
+      color:rgba(232,255,246,0.58);
+      line-height:1.5;
+    }
+    footer .disclose{
+      border:1px solid rgba(255,255,255,0.08);
+      background:rgba(0,0,0,0.16);
+      padding:12px 12px;
+      border-radius:14px;
+    }
+  </style>
 </head>
+
 <body>
-    <div class="container">
-        <header>
-            <h1>LUCIDITY</h1>
-            <div style="letter-spacing: 0.5em; color: var(--secondary)">POWERED BY ACTS</div>
-        </header>
-        
-        <div class="upload-section">
-            <textarea id="textInput" placeholder="Paste content for real-time Beat Map analysis..."></textarea>
-            <div class="btn-group">
-                <button class="btn btn-primary" id="analyzeBtn">⚡ RUN DIAGNOSTIC</button>
-                <button class="btn" style="background:#333; color:white;" id="clearBtn">RESET</button>
-            </div>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <h1>LUCIDITY Web Analyzer</h1>
+        <div class="sub">
+          ACTS (Automated Convergence Triangulation System) — client-side signal scoring.
+          Paste any AI output to receive: metadata, 14 vector health, degradation profile, and a Lucid Drill-style protocol prompt.
         </div>
-        
-        <div class="results-section" id="resultsSection">
+        <div class="pillrow">
+          <div class="pill">ACTS Vectors (14)</div>
+          <div class="pill">Sixfold Rot Mapping</div>
+          <div class="pill">No Upload / Runs Local</div>
+          <div class="pill">Web 1.0</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="grid">
+
+      <!-- INPUT -->
+      <section class="card">
+        <div class="cardhead">
+          <div class="title">INPUT</div>
+          <div class="meta" id="metaBadges">
+            <span>Ready</span>
+          </div>
+        </div>
+
+        <div class="cardbody">
+          <textarea id="inputText" placeholder="Paste AI output here... (text, notes, policy draft, claim summary, etc.)"></textarea>
+          <div class="row">
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="btn" id="analyzeBtn">Analyze</button>
+              <button class="btn secondary" id="sampleBtn">Load Sample</button>
+              <button class="btn secondary" id="clearBtn">Clear</button>
+            </div>
+            <div class="meta" id="liveMeta">
+              <span id="wc">0 words</span>
+              <span id="sc">0 sentences</span>
+            </div>
+          </div>
+
+          <div class="note">
+            Tip: This is designed to be demo-safe. For underwriting conversations, paste anonymized content first (policy text, prompt/output examples, claim narrative drafts, or AI SOPs).
+          </div>
+        </div>
+      </section>
+
+      <!-- OUTPUT -->
+      <section class="card">
+        <div class="tabs">
+          <div class="tab active" data-tab="overview">OVERVIEW</div>
+          <div class="tab" data-tab="vectors">ACTS VECTORS</div>
+          <div class="tab" data-tab="degradation">DEGRADATION ANALYSIS</div>
+          <div class="tab" data-tab="protocol">LUCIDITY PROTOCOL</div>
+        </div>
+
+        <div class="cardbody">
+          <div class="panel active" id="tab-overview">
             <div class="score-card">
-                <div style="font-size: 0.8rem; letter-spacing: 2px; color: var(--secondary);">LUCIDITY INDEX</div>
-                <div class="score-value" id="overallScore">0.00</div>
-                <div id="statusBadge" style="display:inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: bold;"></div>
+              <div class="scorebig" id="scoreBig">—</div>
+              <span class="status" id="statusChip">—</span>
+
+              <div class="kv">
+                <div><b>Analysis Timestamp:</b> <span id="ts">—</span></div>
+                <div><b>Version:</b> <span id="ver">LUCIDITY Web 1.0 (Ultimate)</span></div>
+                <div><b>Text Length:</b> <span id="tl">—</span></div>
+                <div><b>Word Count:</b> <span id="wco">—</span></div>
+                <div><b>Sentence Count:</b> <span id="sco">—</span></div>
+                <div><b>Engine:</b> <span id="eng">ACTS (client-side)</span></div>
+              </div>
             </div>
 
-            <div class="tabs">
-                <button class="tab active" data-tab="beatmap">BEAT MAP</button>
-                <button class="tab" data-tab="vectors">VECTORS</button>
-                <button class="tab" data-tab="protocol">PROTOCOL</button>
+            <div class="note" id="keyFinding">
+              🎯 <b>Key Finding:</b> — <br/>
+              💡 <b>Recommendation:</b> —
             </div>
+          </div>
 
-            <div class="tab-content active" id="beatmap">
-                <div class="beat-map-container">
-                    <div style="font-size: 0.7rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase;">Temporal Flow Analysis (20-Segment Distribution)</div>
-                    <div class="beat-grid" id="beatGrid"></div>
-                    <div id="beatInsights" style="font-size: 0.85rem; border-left: 3px solid var(--primary); padding-left: 15px; color: #ccc;"></div>
-                </div>
-            </div>
+          <div class="panel" id="tab-vectors">
+            <div id="vectorDetails"></div>
+          </div>
 
-            <div class="tab-content" id="vectors">
-                <div id="vectorDetails" style="background:#0a0e1a; padding:20px; border-radius:10px;"></div>
+          <div class="panel" id="tab-degradation">
+            <div class="bars" id="degBars"></div>
+            <div class="note">
+              Degradation profile is computed as a risk-oriented view. “Higher is better” health vectors above still feed these category scores.
+              Use this for underwriting: it produces an explainable, defensible basis for risk scoring.
             </div>
+          </div>
 
-            <div class="tab-content" id="protocol">
-                <div id="protocolItems" style="background:#0a0e1a; padding:20px; border-radius:10px; color: var(--accent);"></div>
+          <div class="panel" id="tab-protocol">
+            <textarea id="protocolOut" style="min-height:260px;" readonly></textarea>
+            <div class="note">
+              This protocol is a *structured repair instruction* that can be used to re-center outputs when drift or rot indicators appear.
             </div>
+          </div>
         </div>
+      </section>
 
-        <footer>
-            PROPRIETARY ACTS ENGINE • ZADEO INC • PROVISIONAL PATENTS PENDING
-        </footer>
     </div>
 
-    <script>
-        class LUCIDITYEngine {
-            analyze(text) {
-                const words = text.toLowerCase().match(/\b(\w+)\b/g) || [];
-                const chunks = this.splitIntoChunks(words, 20);
-                
-                // Real Repetition Check
-                const uniqueRatio = new Set(words).size / (words.length || 1);
-                const baseScore = Math.min(100, uniqueRatio * 130);
+    <footer>
+      <div class="disclose">
+        <b>Disclosure:</b> This web demo runs locally in the browser and does not transmit content. Scores are heuristic indicators intended for demonstration, QA, and risk governance workflows.
+        For production deployments, pair with your governed execution layer and audit logging strategy.
+      </div>
+    </footer>
+  </div>
 
-                // Segment Analysis for Beat Map
-                const segmentScores = chunks.map(chunk => {
-                    const unique = new Set(chunk).size;
-                    return chunk.length > 0 ? (unique / chunk.length) : 1;
-                });
+  <script>
+    class LUCIDITYAnalyzer {
+      constructor(){
+        this.vectors = [
+          'Lexical Diversity','Sentence Complexity','Semantic Coherence','Repetition Index',
+          'Confidence Markers','Specificity Score','Intent Alignment','Voice Consistency',
+          'Structural Variance','Information Density','Hedging Frequency','Entropy Measure',
+          'Pattern Recognition','Convergence Detection'
+        ];
 
-                return {
-                    overall: baseScore.toFixed(2),
-                    segments: segmentScores,
-                    wordCount: words.length
-                };
-            }
+        this.degradationCategories = [
+          { key:'repetition', label:'Repetition', hint:'Convergence loops / recurring patterns' },
+          { key:'vagueness', label:'Vagueness', hint:'Low specificity / missing concrete detail' },
+          { key:'intent_decay', label:'Intent Decay', hint:'Drift from initial meaning / purpose' },
+          { key:'confidence_inflation', label:'Confidence Inflation', hint:'Over-assertion or unstable certainty' },
+          { key:'voice_degradation', label:'Voice Degradation', hint:'Flattened tone / inconsistent style' },
+          { key:'entropy_collapse', label:'Entropy Collapse', hint:'Loss of linguistic variety / collapse' }
+        ];
+      }
 
-            splitIntoChunks(array, parts) {
-                let result = [];
-                for (let i = parts; i > 0; i--) {
-                    result.push(array.splice(0, Math.ceil(array.length / i)));
-                }
-                return result;
-            }
+      analyze(text){
+        const now = new Date();
+        const cleanText = (text || '').trim();
+
+        const words = (cleanText.toLowerCase().match(/\b[\w']+\b/g) || []);
+        const sentences = cleanText.split(/[.!?]+/).map(s=>s.trim()).filter(Boolean);
+
+        const results = {
+          timestamp: now.toLocaleString(),
+          text_length: cleanText.length,
+          word_count: words.length,
+          sentence_count: sentences.length,
+          vector_scores: {},
+          degradation_scores: {},
+          overall_score: 0,
+          status: 'healthy'
+        };
+
+        // Vectors (health: 0..1)
+        this._featureCacheText = null;
+        this._featureCache = null;
+
+        this.vectors.forEach(v=>{
+          results.vector_scores[v] = this.calculateVectorScore(cleanText, v);
+        });
+
+        // Degradation categories (health proxies reversed where needed)
+        results.degradation_scores = this.calculateDegradationScores(cleanText, words, sentences, results.vector_scores);
+
+        // Overall score (0..100)
+        results.overall_score = this.calculateOverallScore(results.vector_scores, results.degradation_scores);
+
+        // Status
+        results.status = results.overall_score >= 75 ? 'healthy' : (results.overall_score >= 50 ? 'degraded' : 'critical');
+
+        // Protocol output
+        results.protocol = this.generateProtocol(results);
+
+        // Key finding
+        results.key_finding = this.generateKeyFinding(results);
+
+        return results;
+      }
+
+      calculateVectorScore(text, vector) {
+        // Cache features per analysis call (prevents recomputing 14x)
+        if (!this._featureCache || this._featureCacheText !== text) {
+          this._featureCacheText = text;
+          this._featureCache = this.computeFeatures(text);
+        }
+        const f = this._featureCache;
+
+        const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+        switch (vector) {
+          case 'Lexical Diversity':
+            return f.lexicalDiversity.toFixed(3);
+
+          case 'Sentence Complexity':
+            // Higher variance + longer sentences => higher complexity (bounded)
+            return clamp01((f.lengthVarianceNorm * 0.65) + (f.avgSentenceLenNorm * 0.35)).toFixed(3);
+
+          case 'Semantic Coherence':
+            // Average similarity between consecutive sentences (bounded)
+            return clamp01(f.semanticCoherence).toFixed(3);
+
+          case 'Repetition Index':
+            // Repetition ratio for 3-grams (higher = worse), so invert to "health"
+            return clamp01(1 - f.trigramRepeatRatio).toFixed(3);
+
+          case 'Confidence Markers':
+            // More balanced confidence language is healthier. Penalize extremes.
+            return clamp01(1 - Math.abs(f.certaintyRate - 0.08) / 0.08).toFixed(3);
+
+          case 'Specificity Score':
+            // Specificity proxies: numbers, proper nouns, concrete nouns (approx)
+            return clamp01(f.specificityScore).toFixed(3);
+
+          case 'Intent Alignment':
+            // Overlap between first sentence keywords and document keywords
+            return clamp01(f.intentAlignment).toFixed(3);
+
+          case 'Voice Consistency':
+            // Stable sentence-length distribution + punctuation style stability
+            return clamp01(f.voiceConsistency).toFixed(3);
+
+          case 'Structural Variance':
+            // Lower variance tends to be more consistent; convert to health
+            return clamp01(1 - f.lengthVarianceNorm).toFixed(3);
+
+          case 'Information Density':
+            // Unique content-words per total words (bounded)
+            return clamp01(f.informationDensity).toFixed(3);
+
+          case 'Hedging Frequency':
+            // Too much hedging lowers health; target around 3–8%
+            return clamp01(1 - Math.abs(f.hedgeRate - 0.05) / 0.08).toFixed(3);
+
+          case 'Entropy Measure':
+            // Normalized Shannon entropy (0..1)
+            return clamp01(f.entropyNorm).toFixed(3);
+
+          case 'Pattern Recognition':
+            // If patterns are too repetitive, health drops; use bigram diversity
+            return clamp01(f.bigramDiversity).toFixed(3);
+
+          case 'Convergence Detection':
+            // Convergence is "collapse toward repetition": high when entropy low & repetition high.
+            // For display as a vector, we show "health" = 1 - convergence.
+            return clamp01(1 - f.convergence).toFixed(3);
+
+          default:
+            return '0.750';
+        }
+      }
+
+      computeFeatures(text) {
+        const clamp01 = (x) => Math.max(0, Math.min(1, x));
+
+        // Basic tokenization
+        const words = (text.toLowerCase().match(/\b[\w']+\b/g) || []);
+        const sentences = text.split(/[.!?]+/).map(s => s.trim()).filter(Boolean);
+
+        const totalWords = Math.max(1, words.length);
+        const uniqueWords = new Set(words);
+        const lexicalDiversity = uniqueWords.size / totalWords;
+
+        // Stopwords (lightweight list; keeps client-side fast)
+        const stop = new Set([
+          'the','a','an','and','or','but','if','then','else','for','to','of','in','on','at','by','with','as',
+          'is','are','was','were','be','been','being','it','this','that','these','those','i','you','we','they',
+          'he','she','them','his','her','our','your','their','from','into','about','over','under','than','so',
+          'not','no','yes','do','does','did','doing','have','has','had','having','can','could','may','might',
+          'will','would','should','must','also','just','very','really'
+        ]);
+
+        const contentWords = words.filter(w => !stop.has(w));
+        const uniqueContent = new Set(contentWords);
+
+        // Sentence stats
+        const lens = sentences.map(s => (s.match(/\b[\w']+\b/g) || []).length).filter(n => n>0);
+        const sentenceCount = Math.max(1, lens.length);
+        const avgSentenceLen = lens.reduce((a,b)=>a+b,0) / sentenceCount;
+
+        // Variance of sentence length (normalized)
+        const variance = lens.reduce((a,b)=>a+Math.pow(b-avgSentenceLen,2),0) / sentenceCount;
+        const lengthVarianceNorm = clamp01(variance / 120); // tuning constant
+        const avgSentenceLenNorm = clamp01(avgSentenceLen / 40);
+
+        // Shannon entropy normalized (use unique words as max)
+        const freq = {};
+        for (const w of words) freq[w] = (freq[w] || 0) + 1;
+        let H = 0;
+        for (const k in freq) {
+          const p = freq[k] / totalWords;
+          H += -p * Math.log2(p);
+        }
+        const maxH = Math.log2(Math.max(2, uniqueWords.size));
+        const entropyNorm = clamp01(H / maxH);
+
+        // N-gram repetition (3-grams)
+        const trigrams = [];
+        for (let i=0; i<words.length-2; i++) trigrams.push(words[i]+' '+words[i+1]+' '+words[i+2]);
+        const triCount = Math.max(1, trigrams.length);
+        const triFreq = {};
+        let repeatedTri = 0;
+        for (const t of trigrams) {
+          triFreq[t] = (triFreq[t] || 0) + 1;
+          if (triFreq[t] === 2) repeatedTri += 2; // count first repeat as 2 hits
+          else if (triFreq[t] > 2) repeatedTri += 1;
+        }
+        const trigramRepeatRatio = clamp01(repeatedTri / triCount);
+
+        // Bigram diversity (proxy for pattern health)
+        const bigrams = [];
+        for (let i=0; i<words.length-1; i++) bigrams.push(words[i]+' '+words[i+1]);
+        const bigramDiversity = clamp01((new Set(bigrams).size) / Math.max(1, bigrams.length));
+
+        // Semantic coherence via Jaccard similarity between consecutive sentences (content words)
+        const sentSets = sentences.map(s => {
+          const ws = (s.toLowerCase().match(/\b[\w']+\b/g) || []).filter(w=>!stop.has(w));
+          return new Set(ws);
+        });
+        let simSum = 0, simN = 0;
+        const jaccard = (A,B) => {
+          if (!A.size || !B.size) return 0;
+          let inter = 0;
+          for (const x of A) if (B.has(x)) inter++;
+          const union = A.size + B.size - inter;
+          return union ? inter/union : 0;
+        };
+        for (let i=0; i<sentSets.length-1; i++) {
+          simSum += jaccard(sentSets[i], sentSets[i+1]);
+          simN++;
+        }
+        const semanticCoherence = clamp01(simN ? (simSum/simN) : 0.65);
+
+        // Confidence & hedging rates (per word)
+        const hedges = new Set(['maybe','might','could','seems','seem','perhaps','likely','unlikely','generally','often','sometimes','approximately','roughly']);
+        const certainty = new Set(['definitely','certainly','always','never','guaranteed','must','proven','clearly','undeniably']);
+
+        let hedgeHits = 0, certaintyHits = 0;
+        for (const w of words) {
+          if (hedges.has(w)) hedgeHits++;
+          if (certainty.has(w)) certaintyHits++;
+        }
+        const hedgeRate = hedgeHits / totalWords;
+        const certaintyRate = certaintyHits / totalWords;
+
+        // Specificity score: numbers + capitalized words + long content words
+        const numbers = (text.match(/\b\d+(\.\d+)?\b/g) || []).length;
+        const caps = (text.match(/\b[A-Z][a-z]+\b/g) || []).length;
+        const longWords = contentWords.filter(w => w.length >= 8).length;
+        const specificityRaw = (numbers*2 + caps + (longWords/8)) / Math.max(1, sentenceCount*2);
+        const specificityScore = clamp01(specificityRaw);
+
+        // Intent alignment: first sentence content overlap with overall content
+        const first = sentSets[0] || new Set();
+        const overall = new Set(uniqueContent);
+        let inter = 0;
+        for (const x of first) if (overall.has(x)) inter++;
+        const intentAlignment = clamp01(overall.size ? (inter / overall.size) * 3.2 : 0.7); // scaled
+
+        // Voice consistency: stable sentence length + consistent punctuation density
+        const punct = (text.match(/[,:;—\-]/g) || []).length;
+        const punctRate = punct / Math.max(1, text.length);
+        const punctTarget = 0.012; // heuristic
+        const punctHealth = clamp01(1 - Math.abs(punctRate - punctTarget)/0.02);
+        const voiceConsistency = clamp01((1 - lengthVarianceNorm)*0.65 + punctHealth*0.35);
+
+        // Information density: unique content words per total words (bounded)
+        const informationDensity = clamp01(uniqueContent.size / totalWords);
+
+        // Convergence: high when entropy low AND repetition high
+        const convergence = clamp01((1 - entropyNorm)*0.55 + trigramRepeatRatio*0.45);
+
+        return {
+          words, sentences,
+          lexicalDiversity,
+          avgSentenceLen, variance,
+          lengthVarianceNorm,
+          avgSentenceLenNorm,
+          entropyNorm,
+          trigramRepeatRatio,
+          bigramDiversity,
+          semanticCoherence,
+          hedgeRate,
+          certaintyRate,
+          specificityScore,
+          intentAlignment,
+          voiceConsistency,
+          informationDensity,
+          convergence
+        };
+      }
+
+      calculateDegradationScores(text, words, sentences, vectorScores){
+        const clamp01 = (x)=>Math.max(0, Math.min(1,x));
+        const n = Math.max(1, words.length);
+
+        // Use existing vectors to form category health
+        const repHealth = parseFloat(vectorScores['Repetition Index'] || 0.7);
+        const specHealth = parseFloat(vectorScores['Specificity Score'] || 0.7);
+        const intentHealth = parseFloat(vectorScores['Intent Alignment'] || 0.7);
+        const confHealth = parseFloat(vectorScores['Confidence Markers'] || 0.7);
+        const voiceHealth = parseFloat(vectorScores['Voice Consistency'] || 0.7);
+        const entHealth = parseFloat(vectorScores['Entropy Measure'] || 0.7);
+
+        // Convert to category "risk" then invert to “health-ish” score so UI stays consistent
+        const repetition = repHealth;                        // already health
+        const vagueness = specHealth;                        // higher specificity = healthier
+        const intent_decay = intentHealth;                   // alignment = healthier
+        const confidence_inflation = clamp01(confHealth);    // balanced = healthier
+        const voice_degradation = clamp01(voiceHealth);      // consistent = healthier
+        const entropy_collapse = clamp01(entHealth);         // higher entropy norm = healthier
+
+        return { repetition, vagueness, intent_decay, confidence_inflation, voice_degradation, entropy_collapse };
+      }
+
+      calculateOverallScore(vectorScores, degradationScores){
+        const clamp01 = (x)=>Math.max(0, Math.min(1,x));
+        // Weighted blend: vectors (60%) + degradation categories (40%)
+        const vVals = Object.values(vectorScores).map(x=>parseFloat(x));
+        const vAvg = vVals.length ? vVals.reduce((a,b)=>a+b,0)/vVals.length : 0.7;
+
+        const dVals = Object.values(degradationScores).map(x=>parseFloat(x));
+        const dAvg = dVals.length ? dVals.reduce((a,b)=>a+b,0)/dVals.length : 0.7;
+
+        const score01 = clamp01(vAvg*0.60 + dAvg*0.40);
+        return Math.round(score01 * 10000)/100; // 2 decimals
+      }
+
+      generateProtocol(results){
+        // Produce a tight, copy-ready instruction for remediation
+        const weak = [];
+        for (const [k,v] of Object.entries(results.vector_scores)){
+          const n = parseFloat(v);
+          if (n < 0.55) weak.push({k, v:n});
+        }
+        weak.sort((a,b)=>a.v-b.v);
+
+        const worst = weak.slice(0,4);
+
+        const lines = [];
+        lines.push("LUCID DRILL™ — Evidence-Driven Repair Protocol");
+        lines.push("Mode: Surgical correction (no full regeneration)");
+        lines.push(`Timestamp: ${results.timestamp}`);
+        lines.push("");
+        lines.push("Objective:");
+        lines.push("Re-center output coherence by addressing measured drift vectors, in order of severity.");
+        lines.push("");
+
+        if (!worst.length){
+          lines.push("Status: HEALTHY");
+          lines.push("No critical drift vectors detected. Maintain current drafting pattern. If publishing to regulated contexts, add citations + explicit constraints.");
+          return lines.join("\n");
         }
 
-        const engine = new LUCIDITYEngine();
-
-        document.getElementById('analyzeBtn').addEventListener('click', () => {
-            const text = document.getElementById('textInput').value;
-            if(!text) return alert("Paste text first");
-
-            const results = engine.analyze(text);
-            
-            // UI Update
-            document.getElementById('overallScore').innerText = results.overall;
-            document.getElementById('resultsSection').classList.add('active');
-            
-            const badge = document.getElementById('statusBadge');
-            if(results.overall > 80) {
-                badge.innerText = "HEALTHY"; badge.style.background = "rgba(0,255,157,0.2)"; badge.style.color = "var(--primary)";
-            } else {
-                badge.innerText = "DEGRADED"; badge.style.background = "rgba(255,51,102,0.2)"; badge.style.color = "var(--danger)";
-            }
-
-            // Draw Beat Map
-            const grid = document.getElementById('beatGrid');
-            grid.innerHTML = '';
-            results.segments.forEach((s, i) => {
-                const block = document.createElement('div');
-                block.className = 'beat-block';
-                const intensity = s * 100;
-                block.style.background = intensity > 80 ? 'var(--primary)' : (intensity > 50 ? 'var(--warning)' : 'var(--danger)');
-                block.title = `Segment ${i+1}: ${intensity.toFixed(1)}% integrity`;
-                grid.appendChild(block);
-            });
-
-            document.getElementById('beatInsights').innerText = results.overall < 70 ? 
-                "CRITICAL: Structural collapse detected in specific segments. High convergence risk." : 
-                "NOMINAL: Information density maintained across temporal segments.";
+        lines.push("Priority Repairs (lowest health first):");
+        worst.forEach((w,i)=>{
+          lines.push(`${i+1}) ${w.k} — current health ${w.v.toFixed(3)} (target ≥ 0.70)`);
         });
 
-        // Tab Logic
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
-                tab.classList.add('active');
-                document.getElementById(tab.dataset.tab).classList.add('active');
-            });
+        lines.push("");
+        lines.push("Repair Instructions (paste into the model as a command):");
+        lines.push("—");
+        lines.push("You are repairing a draft for coherence and reliability. Do NOT add fluff. Do NOT change meaning.");
+        lines.push("1) Remove repetitive phrasing and any looping structures.");
+        lines.push("2) Increase specificity: add concrete nouns, numbers, proper terms, and unambiguous qualifiers.");
+        lines.push("3) Re-anchor intent: restate the core objective in the first paragraph and keep every paragraph aligned to it.");
+        lines.push("4) Stabilize voice: keep sentence rhythm consistent; avoid sudden tone shifts.");
+        lines.push("5) After edits, output a short 'Change Log' (max 6 bullets) describing what changed and where.");
+        lines.push("—");
+        lines.push("");
+        lines.push("Verification Step:");
+        lines.push("Re-run this analyzer. Target: Overall ≥ 75 and no vectors below 0.55.");
+
+        return lines.join("\n");
+      }
+
+      generateKeyFinding(results){
+        // Identify weakest degradation category as “key finding”
+        const entries = Object.entries(results.degradation_scores).map(([k,v])=>({k, v:parseFloat(v)}));
+        entries.sort((a,b)=>a.v-b.v); // lowest health first
+        const worst = entries[0];
+
+        const labelMap = {
+          repetition: "Repetition risk clusters",
+          vagueness: "Vagueness / low specificity",
+          intent_decay: "Intent drift / decay",
+          confidence_inflation: "Confidence imbalance",
+          voice_degradation: "Voice flattening / inconsistency",
+          entropy_collapse: "Entropy collapse / reduced variety"
+        };
+
+        const recMap = {
+          repetition: "Reduce repeated phrases; merge duplicate ideas; vary structure.",
+          vagueness: "Add concrete terms, numbers, named entities, and measurable claims.",
+          intent_decay: "Restate the goal; remove off-topic sections; align every paragraph to intent.",
+          confidence_inflation: "Balance certainty language; label assumptions; avoid over-assertion.",
+          voice_degradation: "Standardize tone and rhythm; remove sudden register shifts.",
+          entropy_collapse: "Increase lexical variety; avoid repeated sentence templates."
+        };
+
+        return {
+          finding: labelMap[worst.k] || "Signal weakness detected",
+          recommendation: recMap[worst.k] || "Apply Lucid Drill protocol and re-check vectors."
+        };
+      }
+    }
+
+    class UIController {
+      constructor(){
+        this.analyzer = new LUCIDITYAnalyzer();
+        this.bind();
+        this.bindTabs();
+        this.liveCounts();
+      }
+
+      bind(){
+        const input = document.getElementById('inputText');
+
+        document.getElementById('analyzeBtn').addEventListener('click', ()=>this.run());
+        document.getElementById('sampleBtn').addEventListener('click', ()=>{
+          input.value = "This is a sample AI output. It repeats itself. It repeats itself. It repeats itself.\n\nThe purpose is to show clustering of repetition and reduced specificity. The purpose is to show clustering of repetition and reduced specificity.\n\nWe could improve this by removing duplicates and adding concrete details, like dates, thresholds, and named entities.";
+          this.updateLiveMeta();
+          this.run();
+        });
+        document.getElementById('clearBtn').addEventListener('click', ()=>{
+          input.value = "";
+          this.updateLiveMeta();
         });
 
-        document.getElementById('clearBtn').addEventListener('click', () => location.reload());
-    </script>
+        input.addEventListener('input', ()=>this.updateLiveMeta());
+      }
+
+      bindTabs(){
+        document.querySelectorAll('.tab').forEach(t=>{
+          t.addEventListener('click', ()=>{
+            document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+            t.classList.add('active');
+            const key = t.dataset.tab;
+            document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+            document.getElementById(`tab-${key}`).classList.add('active');
+          });
+        });
+      }
+
+      liveCounts(){
+        this.updateLiveMeta();
+      }
+
+      updateLiveMeta(){
+        const text = (document.getElementById('inputText').value || '').trim();
+        const words = (text.toLowerCase().match(/\b[\w']+\b/g) || []);
+        const sentences = text.split(/[.!?]+/).map(s=>s.trim()).filter(Boolean);
+        document.getElementById('wc').textContent = `${words.length} words`;
+        document.getElementById('sc').textContent = `${sentences.length} sentences`;
+      }
+
+      run(){
+        const text = (document.getElementById('inputText').value || '').trim();
+        if (!text){
+          alert("Paste text first.");
+          return;
+        }
+        const res = this.analyzer.analyze(text);
+        this.render(res);
+      }
+
+      render(res){
+        // Overview
+        document.getElementById('scoreBig').textContent = `${res.overall_score.toFixed(2)}%`;
+        const chip = document.getElementById('statusChip');
+        chip.textContent = res.status.toUpperCase();
+        chip.className = `status ${res.status}`;
+
+        document.getElementById('ts').textContent = res.timestamp;
+        document.getElementById('tl').textContent = `${res.text_length} characters`;
+        document.getElementById('wco').textContent = res.word_count;
+        document.getElementById('sco').textContent = res.sentence_count;
+
+        // Key finding
+        document.getElementById('keyFinding').innerHTML =
+          `🎯 <b>Key Finding:</b> ${res.key_finding.finding}<br/>` +
+          `💡 <b>Recommendation:</b> ${res.key_finding.recommendation}`;
+
+        // Vectors grid
+        this.displayVectorDetails(res);
+
+        // Degradation bars
+        this.displayDegradationBars(res);
+
+        // Protocol
+        document.getElementById('protocolOut').value = res.protocol;
+
+        // meta badges
+        const mb = document.getElementById('metaBadges');
+        mb.innerHTML = `<span>${res.status.toUpperCase()}</span><span>${res.overall_score.toFixed(2)}%</span><span>${res.word_count} words</span>`;
+      }
+
+      displayVectorDetails(results) {
+        const panel = document.getElementById('vectorDetails');
+        panel.innerHTML = '<div class="vector-grid"></div>';
+        const grid = panel.querySelector('.vector-grid');
+
+        Object.entries(results.vector_scores).forEach(([vector, score]) => {
+          const v = parseFloat(score);
+          const pct = Math.max(0, Math.min(100, Math.round(v * 100)));
+
+          const node = document.createElement('div');
+          node.className = 'vector-node';
+          node.innerHTML = `
+            <div class="vector-label">${vector.toUpperCase()}</div>
+            <div class="vector-value">${score}</div>
+            <div class="vector-sub">${pct}% health</div>
+            <div class="vector-bar-mini">
+              <div class="vector-fill-mini" style="width:${pct}%"></div>
+            </div>
+          `;
+          grid.appendChild(node);
+        });
+      }
+
+      displayDegradationBars(results){
+        const host = document.getElementById('degBars');
+        host.innerHTML = "";
+
+        const cats = this.analyzer.degradationCategories;
+        cats.forEach(c=>{
+          const v = results.degradation_scores[c.key] ?? 0.7;
+          const pct = Math.max(0, Math.min(100, Math.round(parseFloat(v) * 100)));
+
+          const row = document.createElement('div');
+          row.className = 'barrow';
+          row.innerHTML = `
+            <div class="barlabel">${c.label}</div>
+            <div class="bar"><div class="fill" style="width:${pct}%"></div></div>
+            <div class="barpct">${pct}%</div>
+          `;
+          host.appendChild(row);
+        });
+      }
+    }
+
+    // boot
+    new UIController();
+  </script>
 </body>
 </html>
