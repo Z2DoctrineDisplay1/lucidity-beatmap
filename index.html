@@ -1,98 +1,229 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>LUCIDITY Beat Map Demo</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f0f0f0;
-      overflow-x: hidden;
-    }
-    .container { max-width: 1200px; margin: 0 auto; }
-    #beatmap-container { white-space: normal; word-break: break-word; overflow-wrap: anywhere; }
-    .alert-text { color: #ff0000; font-weight: bold; }
-    .caution-text { color: #ffff00; font-weight: bold; }
-    .warning-text { color: #ff8800; font-weight: bold; }
-    .meta-line { font-size: 12px; color: #666; text-align: center; margin: 6px 0 0 0; }
-    .legend-line { font-size: 12px; color: #aaa; text-align: center; margin: 8px 0 0 0; }
-    .disclosure { font-size: 11px; color: #555; text-align: center; margin-top: 14px; line-height: 1.3; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LUCIDITY | Beat Map Diagnostic</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #00ff9d; /* Healthy Green */
+            --warning: #ffaa00; /* Caution Yellow */
+            --danger: #ff3366;  /* Alert Red */
+            --bg-dark: #0a0e1a;
+            --card-bg: rgba(16, 22, 42, 0.9);
+            --glow: 0 0 15px rgba(0, 255, 157, 0.3);
+        }
+
+        body {
+            font-family: 'IBM Plex Mono', monospace;
+            background-color: var(--bg-dark);
+            color: #e8f4f8;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard {
+            width: 90%;
+            max-width: 900px;
+            background: var(--card-bg);
+            border: 1px solid rgba(0, 255, 157, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            letter-spacing: 4px;
+            color: var(--primary);
+            text-transform: uppercase;
+            margin: 0;
+            text-shadow: var(--glow);
+        }
+
+        .meta-strip {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Beat Map Flow Grid */
+        .flow-container {
+            margin-bottom: 30px;
+        }
+
+        .label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            display: block;
+            color: var(--primary);
+        }
+
+        .beat-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            gap: 4px;
+            height: 30px;
+        }
+
+        .beat-block {
+            background: #1a2236;
+            border-radius: 2px;
+            transition: transform 0.2s;
+        }
+
+        .beat-block:hover {
+            transform: scale(1.2);
+            z-index: 10;
+        }
+
+        /* Logic for Bar Colors */
+        .status-green { background: var(--primary); box-shadow: 0 0 8px rgba(0, 255, 157, 0.4); }
+        .status-yellow { background: var(--warning); box-shadow: 0 0 8px rgba(255, 170, 0, 0.4); }
+        .status-red { background: var(--danger); box-shadow: 0 0 8px rgba(255, 51, 102, 0.4); }
+
+        /* Metric Rows */
+        .metric-row {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 15px;
+        }
+
+        .metric-name { width: 60px; font-weight: 700; font-size: 0.9rem; }
+
+        .progress-track {
+            flex-grow: 1;
+            height: 12px;
+            background: #1a2236;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1s ease-in-out;
+        }
+
+        .metric-value {
+            width: 100px;
+            text-align: right;
+            font-size: 0.85rem;
+        }
+
+        /* Insights Box */
+        .insights {
+            background: rgba(0, 255, 157, 0.05);
+            border-left: 3px solid var(--primary);
+            padding: 20px;
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+
+        .insights p { margin: 5px 0; font-size: 0.9rem; }
+
+        footer {
+            margin-top: 30px;
+            font-size: 0.7rem;
+            color: #444;
+            text-align: center;
+            line-height: 1.5;
+        }
+    </style>
 </head>
-
 <body>
-  <div class="container">
-    <h1 style="text-align:center;">LUCIDITY Beat Map - HTML Demo</h1>
 
-    <div id="beatmap-container" style="font-family:'Courier New', monospace; background:#1a1a1a; color:#00ff00; padding:20px; border-radius:8px;">
-      <h2 style="text-align:center; color:#00ff00; margin-bottom:10px;">LUCIDITY BEAT MAP</h2>
+<div class="dashboard">
+    <header>
+        <h1>Lucidity Beat Map</h1>
+        <div class="meta-strip">System: ACTS v1.0 • Node: TR-01 • <span id="time-stamp"></span></div>
+    </header>
 
-      <!-- Timestamp / Version (auto-fills) -->
-      <p id="metaStamp" class="meta-line">Generated by LUCIDITY • Demo Build • <span id="metaDate">—</span></p>
-
-      <!-- Legend -->
-      <p class="legend-line">Legend: <span style="color:#00ff00;">Green</span> = Healthy | <span style="color:#ffff00;">Yellow</span> = Caution | <span style="color:#ff8800;">Orange</span> = Warning | <span style="color:#ff0000;">Red</span> = Alert</p>
-
-      <div id="timeline" style="margin: 20px 0;">
-        <div style="display:flex; align-items:center; margin-bottom:10px;">
-          <span style="width:150px;">Overall Flow:</span>
-
-          <div style="flex:1; height:30px; background:#333; border-radius:4px; overflow:hidden; display:flex;">
-            <div style="width:5.0%; height:100%; background:#ffff00; cursor:pointer;" title="Segment 1: 46.7% degradation"></div>
-            <div style="width:5.0%; height:100%; background:#ffff00; cursor:pointer;" title="Segment 2: 44.8% degradation"></div>
-            <div style="width:5.0%; height:100%; background:#ff8800; cursor:pointer;" title="Segment 20: 52.1% degradation"></div>
-          </div>
+    <div class="flow-container">
+        <span class="label">Temporal Flow Analysis</span>
+        <div class="beat-grid">
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-yellow"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-yellow"></div>
+            <div class="beat-block status-yellow"></div>
+            <div class="beat-block status-red"></div>
+            <div class="beat-block status-red"></div>
+            <div class="beat-block status-yellow"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-green"></div>
+            <div class="beat-block status-yellow"></div>
+            <div class="beat-block status-yellow"></div>
+            <div class="beat-block status-red"></div>
+            <div class="beat-block status-red"></div>
+            <div class="beat-block status-red"></div>
+            <div class="beat-block status-red"></div>
         </div>
-      </div>
-
-      <div id="categories" style="margin: 20px 0;">
-        <div style="display:flex; align-items:center; margin:5px 0;">
-          <span style="width:150px; font-weight:bold;">REP:</span>
-          <div style="flex:1; height:20px; background:#333; border-radius:4px; overflow:hidden;">
-            <div style="width:91%; height:100%; background:#ff0000;"></div>
-          </div>
-          <span style="width:120px; text-align:right; margin-left:10px;">
-            91% <span class="alert-text">Alert!</span>
-          </span>
-        </div>
-
-        <div style="display:flex; align-items:center; margin:5px 0;">
-          <span style="width:150px; font-weight:bold;">INT:</span>
-          <div style="flex:1; height:20px; background:#333; border-radius:4px; overflow:hidden;">
-            <div style="width:56%; height:100%; background:#ff8800;"></div>
-          </div>
-          <span style="width:120px; text-align:right; margin-left:10px;">
-            56% <span class="warning-text">Warning</span>
-          </span>
-        </div>
-      </div>
-
-      <div id="insights" style="margin-top:30px; padding:15px; background:#2a2a2a; border-left:4px solid #00ff00; border-radius:4px;">
-        <p style="margin:5px 0;"><strong>🎯 Key Finding:</strong> Repetition spikes in final sections</p>
-        <p style="margin:5px 0;"><strong>💡 Recommendation:</strong> Remove redundant content and vary phrasing</p>
-      </div>
-
-      <!-- Disclosure Footer -->
-      <div class="disclosure">
-        Demonstration output for evaluation and discussion. Not a final underwriting determination or legal conclusion.<br>
-        Results may vary by input content and analysis settings.
-      </div>
     </div>
-  </div>
 
-  <!-- Lightweight timestamp script (no external dependencies) -->
-  <script>
-    (function () {
-      const d = new Date();
-      const formatted =
-        d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: '2-digit' }) +
-        ' • ' +
-        d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-      const el = document.getElementById('metaDate');
-      if (el) el.textContent = formatted;
-    })();
-  </script>
+    <div class="metrics">
+        <span class="label">Vector Degradation</span>
+        
+        <div class="metric-row">
+            <div class="metric-name">REP</div>
+            <div class="progress-track"><div class="progress-fill status-red" style="width: 91%"></div></div>
+            <div class="metric-value" style="color:var(--danger)">91% ALERT</div>
+        </div>
+
+        <div class="metric-row">
+            <div class="metric-name">INT</div>
+            <div class="progress-track"><div class="progress-fill status-yellow" style="width: 56%"></div></div>
+            <div class="metric-value" style="color:var(--warning)">56% CAUTION</div>
+        </div>
+
+        <div class="metric-row">
+            <div class="metric-name">VAG</div>
+            <div class="progress-track"><div class="progress-fill status-yellow" style="width: 43%"></div></div>
+            <div class="metric-value">43% CAUTION</div>
+        </div>
+
+        <div class="metric-row">
+            <div class="metric-name">VOI</div>
+            <div class="progress-track"><div class="progress-fill status-green" style="width: 11%"></div></div>
+            <div class="metric-value">11% HEALTHY</div>
+        </div>
+    </div>
+
+    <div class="insights">
+        <p><strong>🎯 CRITICAL FINDING:</strong> Repetition spikes detected in the final 25% of content blocks.</p>
+        <p><strong>💡 RECOMMENDATION:</strong> Implement variance protocol; redistribute information density to mid-sections.</p>
+    </div>
+
+    <footer>
+        PROPRIETARY TECHNOLOGY: ZADEO INC. • PATENTS PENDING<br>
+        Demonstration output for evaluation. Not a final legal conclusion.
+    </footer>
+</div>
+
+<script>
+    // Auto-update the timestamp to look "Live"
+    const now = new Date();
+    document.getElementById('time-stamp').innerText = now.toLocaleString();
+</script>
+
 </body>
 </html>
