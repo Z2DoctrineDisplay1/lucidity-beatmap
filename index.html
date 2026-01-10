@@ -3,227 +3,184 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LUCIDITY | Beat Map Diagnostic</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>LUCIDITY - AI Content Analysis System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=IBM+Plex+Mono:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         :root {
-            --primary: #00ff9d; /* Healthy Green */
-            --warning: #ffaa00; /* Caution Yellow */
-            --danger: #ff3366;  /* Alert Red */
-            --bg-dark: #0a0e1a;
-            --card-bg: rgba(16, 22, 42, 0.9);
-            --glow: 0 0 15px rgba(0, 255, 157, 0.3);
+            --primary: #00ff9d;
+            --secondary: #0066ff;
+            --accent: #ff00ff;
+            --dark: #0a0e1a;
+            --darker: #050810;
+            --light: #e8f4f8;
+            --warning: #ffaa00;
+            --danger: #ff3366;
+            --success: #00ff9d;
+            --glow-primary: 0 0 20px rgba(0, 255, 157, 0.3);
         }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'IBM Plex Mono', monospace; background: var(--darker); color: var(--light); min-height: 100vh; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 2rem; }
+        
+        header { text-align: center; margin-bottom: 4rem; padding: 3rem 0; }
+        h1 { font-family: 'Orbitron', sans-serif; font-size: 4rem; background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: 0.1em; }
+        
+        .upload-section { background: rgba(10, 14, 26, 0.9); border: 2px solid rgba(0, 255, 157, 0.2); border-radius: 20px; padding: 3rem; margin-bottom: 3rem; box-shadow: var(--glow-primary); }
+        textarea { width: 100%; min-height: 200px; background: #050810; border: 2px solid #0044cc; border-radius: 10px; padding: 1.5rem; color: white; margin-top: 1rem; }
+        
+        .btn-group { display: flex; gap: 1rem; margin-top: 1.5rem; }
+        .btn { font-family: 'Orbitron', sans-serif; padding: 1rem 2rem; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; text-transform: uppercase; }
+        .btn-primary { background: var(--primary); color: var(--dark); }
+        
+        /* BEAT MAP SPECIFIC CSS */
+        .beat-map-container { background: #0a0e1a; padding: 25px; border-radius: 12px; border: 1px solid #333; margin-top: 20px; }
+        .beat-grid { display: grid; grid-template-columns: repeat(20, 1fr); gap: 6px; height: 40px; margin: 20px 0; }
+        .beat-block { border-radius: 3px; transition: all 0.3s ease; position: relative; }
+        .beat-block:hover::after { content: attr(title); position: absolute; bottom: 50px; left: 50%; transform: translateX(-50%); background: black; padding: 5px; font-size: 10px; white-space: nowrap; z-index: 100; border: 1px solid var(--primary); }
+        
+        .results-section { display: none; }
+        .results-section.active { display: block; }
+        .tabs { display: flex; gap: 10px; border-bottom: 2px solid #222; margin-bottom: 20px; }
+        .tab { padding: 15px; background: transparent; color: #666; border: none; cursor: pointer; font-family: 'Orbitron'; font-size: 0.8rem; }
+        .tab.active { color: var(--primary); border-bottom: 2px solid var(--primary); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        body {
-            font-family: 'IBM Plex Mono', monospace;
-            background-color: var(--bg-dark);
-            color: #e8f4f8;
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
+        .score-card { background: #0f172a; padding: 30px; border-radius: 20px; margin-bottom: 20px; border: 1px solid #1e293b; }
+        .score-value { font-family: 'Orbitron'; font-size: 3.5rem; color: var(--primary); }
 
-        .dashboard {
-            width: 90%;
-            max-width: 900px;
-            background: var(--card-bg);
-            border: 1px solid rgba(0, 255, 157, 0.2);
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-
-        header {
-            text-align: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            margin-bottom: 30px;
-            padding-bottom: 20px;
-        }
-
-        h1 {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            letter-spacing: 4px;
-            color: var(--primary);
-            text-transform: uppercase;
-            margin: 0;
-            text-shadow: var(--glow);
-        }
-
-        .meta-strip {
-            font-size: 0.75rem;
-            color: #666;
-            margin-top: 10px;
-        }
-
-        /* Beat Map Flow Grid */
-        .flow-container {
-            margin-bottom: 30px;
-        }
-
-        .label {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-            display: block;
-            color: var(--primary);
-        }
-
-        .beat-grid {
-            display: grid;
-            grid-template-columns: repeat(20, 1fr);
-            gap: 4px;
-            height: 30px;
-        }
-
-        .beat-block {
-            background: #1a2236;
-            border-radius: 2px;
-            transition: transform 0.2s;
-        }
-
-        .beat-block:hover {
-            transform: scale(1.2);
-            z-index: 10;
-        }
-
-        /* Logic for Bar Colors */
-        .status-green { background: var(--primary); box-shadow: 0 0 8px rgba(0, 255, 157, 0.4); }
-        .status-yellow { background: var(--warning); box-shadow: 0 0 8px rgba(255, 170, 0, 0.4); }
-        .status-red { background: var(--danger); box-shadow: 0 0 8px rgba(255, 51, 102, 0.4); }
-
-        /* Metric Rows */
-        .metric-row {
-            display: flex;
-            align-items: center;
-            margin-bottom: 15px;
-            gap: 15px;
-        }
-
-        .metric-name { width: 60px; font-weight: 700; font-size: 0.9rem; }
-
-        .progress-track {
-            flex-grow: 1;
-            height: 12px;
-            background: #1a2236;
-            border-radius: 6px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            border-radius: 6px;
-            transition: width 1s ease-in-out;
-        }
-
-        .metric-value {
-            width: 100px;
-            text-align: right;
-            font-size: 0.85rem;
-        }
-
-        /* Insights Box */
-        .insights {
-            background: rgba(0, 255, 157, 0.05);
-            border-left: 3px solid var(--primary);
-            padding: 20px;
-            border-radius: 4px;
-            margin-top: 30px;
-        }
-
-        .insights p { margin: 5px 0; font-size: 0.9rem; }
-
-        footer {
-            margin-top: 30px;
-            font-size: 0.7rem;
-            color: #444;
-            text-align: center;
-            line-height: 1.5;
-        }
+        footer { text-align: center; margin-top: 50px; opacity: 0.6; font-size: 0.8rem; padding-bottom: 40px; }
     </style>
 </head>
 <body>
-
-<div class="dashboard">
-    <header>
-        <h1>Lucidity Beat Map</h1>
-        <div class="meta-strip">System: ACTS v1.0 • Node: TR-01 • <span id="time-stamp"></span></div>
-    </header>
-
-    <div class="flow-container">
-        <span class="label">Temporal Flow Analysis</span>
-        <div class="beat-grid">
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-yellow"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-yellow"></div>
-            <div class="beat-block status-yellow"></div>
-            <div class="beat-block status-red"></div>
-            <div class="beat-block status-red"></div>
-            <div class="beat-block status-yellow"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-green"></div>
-            <div class="beat-block status-yellow"></div>
-            <div class="beat-block status-yellow"></div>
-            <div class="beat-block status-red"></div>
-            <div class="beat-block status-red"></div>
-            <div class="beat-block status-red"></div>
-            <div class="beat-block status-red"></div>
-        </div>
-    </div>
-
-    <div class="metrics">
-        <span class="label">Vector Degradation</span>
+    <div class="container">
+        <header>
+            <h1>LUCIDITY</h1>
+            <div style="letter-spacing: 0.5em; color: var(--secondary)">POWERED BY ACTS</div>
+        </header>
         
-        <div class="metric-row">
-            <div class="metric-name">REP</div>
-            <div class="progress-track"><div class="progress-fill status-red" style="width: 91%"></div></div>
-            <div class="metric-value" style="color:var(--danger)">91% ALERT</div>
+        <div class="upload-section">
+            <textarea id="textInput" placeholder="Paste content for real-time Beat Map analysis..."></textarea>
+            <div class="btn-group">
+                <button class="btn btn-primary" id="analyzeBtn">⚡ RUN DIAGNOSTIC</button>
+                <button class="btn" style="background:#333; color:white;" id="clearBtn">RESET</button>
+            </div>
+        </div>
+        
+        <div class="results-section" id="resultsSection">
+            <div class="score-card">
+                <div style="font-size: 0.8rem; letter-spacing: 2px; color: var(--secondary);">LUCIDITY INDEX</div>
+                <div class="score-value" id="overallScore">0.00</div>
+                <div id="statusBadge" style="display:inline-block; padding: 5px 15px; border-radius: 20px; font-size: 0.7rem; font-weight: bold;"></div>
+            </div>
+
+            <div class="tabs">
+                <button class="tab active" data-tab="beatmap">BEAT MAP</button>
+                <button class="tab" data-tab="vectors">VECTORS</button>
+                <button class="tab" data-tab="protocol">PROTOCOL</button>
+            </div>
+
+            <div class="tab-content active" id="beatmap">
+                <div class="beat-map-container">
+                    <div style="font-size: 0.7rem; color: #aaa; letter-spacing: 1px; text-transform: uppercase;">Temporal Flow Analysis (20-Segment Distribution)</div>
+                    <div class="beat-grid" id="beatGrid"></div>
+                    <div id="beatInsights" style="font-size: 0.85rem; border-left: 3px solid var(--primary); padding-left: 15px; color: #ccc;"></div>
+                </div>
+            </div>
+
+            <div class="tab-content" id="vectors">
+                <div id="vectorDetails" style="background:#0a0e1a; padding:20px; border-radius:10px;"></div>
+            </div>
+
+            <div class="tab-content" id="protocol">
+                <div id="protocolItems" style="background:#0a0e1a; padding:20px; border-radius:10px; color: var(--accent);"></div>
+            </div>
         </div>
 
-        <div class="metric-row">
-            <div class="metric-name">INT</div>
-            <div class="progress-track"><div class="progress-fill status-yellow" style="width: 56%"></div></div>
-            <div class="metric-value" style="color:var(--warning)">56% CAUTION</div>
-        </div>
-
-        <div class="metric-row">
-            <div class="metric-name">VAG</div>
-            <div class="progress-track"><div class="progress-fill status-yellow" style="width: 43%"></div></div>
-            <div class="metric-value">43% CAUTION</div>
-        </div>
-
-        <div class="metric-row">
-            <div class="metric-name">VOI</div>
-            <div class="progress-track"><div class="progress-fill status-green" style="width: 11%"></div></div>
-            <div class="metric-value">11% HEALTHY</div>
-        </div>
+        <footer>
+            PROPRIETARY ACTS ENGINE • ZADEO INC • PROVISIONAL PATENTS PENDING
+        </footer>
     </div>
 
-    <div class="insights">
-        <p><strong>🎯 CRITICAL FINDING:</strong> Repetition spikes detected in the final 25% of content blocks.</p>
-        <p><strong>💡 RECOMMENDATION:</strong> Implement variance protocol; redistribute information density to mid-sections.</p>
-    </div>
+    <script>
+        class LUCIDITYEngine {
+            analyze(text) {
+                const words = text.toLowerCase().match(/\b(\w+)\b/g) || [];
+                const chunks = this.splitIntoChunks(words, 20);
+                
+                // Real Repetition Check
+                const uniqueRatio = new Set(words).size / (words.length || 1);
+                const baseScore = Math.min(100, uniqueRatio * 130);
 
-    <footer>
-        PROPRIETARY TECHNOLOGY: ZADEO INC. • PATENTS PENDING<br>
-        Demonstration output for evaluation. Not a final legal conclusion.
-    </footer>
-</div>
+                // Segment Analysis for Beat Map
+                const segmentScores = chunks.map(chunk => {
+                    const unique = new Set(chunk).size;
+                    return chunk.length > 0 ? (unique / chunk.length) : 1;
+                });
 
-<script>
-    // Auto-update the timestamp to look "Live"
-    const now = new Date();
-    document.getElementById('time-stamp').innerText = now.toLocaleString();
-</script>
+                return {
+                    overall: baseScore.toFixed(2),
+                    segments: segmentScores,
+                    wordCount: words.length
+                };
+            }
 
+            splitIntoChunks(array, parts) {
+                let result = [];
+                for (let i = parts; i > 0; i--) {
+                    result.push(array.splice(0, Math.ceil(array.length / i)));
+                }
+                return result;
+            }
+        }
+
+        const engine = new LUCIDITYEngine();
+
+        document.getElementById('analyzeBtn').addEventListener('click', () => {
+            const text = document.getElementById('textInput').value;
+            if(!text) return alert("Paste text first");
+
+            const results = engine.analyze(text);
+            
+            // UI Update
+            document.getElementById('overallScore').innerText = results.overall;
+            document.getElementById('resultsSection').classList.add('active');
+            
+            const badge = document.getElementById('statusBadge');
+            if(results.overall > 80) {
+                badge.innerText = "HEALTHY"; badge.style.background = "rgba(0,255,157,0.2)"; badge.style.color = "var(--primary)";
+            } else {
+                badge.innerText = "DEGRADED"; badge.style.background = "rgba(255,51,102,0.2)"; badge.style.color = "var(--danger)";
+            }
+
+            // Draw Beat Map
+            const grid = document.getElementById('beatGrid');
+            grid.innerHTML = '';
+            results.segments.forEach((s, i) => {
+                const block = document.createElement('div');
+                block.className = 'beat-block';
+                const intensity = s * 100;
+                block.style.background = intensity > 80 ? 'var(--primary)' : (intensity > 50 ? 'var(--warning)' : 'var(--danger)');
+                block.title = `Segment ${i+1}: ${intensity.toFixed(1)}% integrity`;
+                grid.appendChild(block);
+            });
+
+            document.getElementById('beatInsights').innerText = results.overall < 70 ? 
+                "CRITICAL: Structural collapse detected in specific segments. High convergence risk." : 
+                "NOMINAL: Information density maintained across temporal segments.";
+        });
+
+        // Tab Logic
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab, .tab-content').forEach(el => el.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        document.getElementById('clearBtn').addEventListener('click', () => location.reload());
+    </script>
 </body>
 </html>
